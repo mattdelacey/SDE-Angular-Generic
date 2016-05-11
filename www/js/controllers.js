@@ -1,4 +1,4 @@
-angular.module('starter.controllers', ['kinvey'])
+angular.module('starter.controllers', ['kinvey', 'ngCordova'])
 
 .controller('DashCtrl', function($scope) {
 
@@ -10,29 +10,15 @@ angular.module('starter.controllers', ['kinvey'])
 
 })
 
-.controller('ChatsCtrl', function($scope, $kinvey) {
-    $kinvey.DataStore.find('chats').then(function(chats) {
-        $scope.chats = chats;
-    });
-    $scope.remove = function(chatId) {
-        $kinvey.DataStore.destroy('chats', chatId).then(function() {
-            console.log("chat deleted: " + chatId);
-        });
-    }
-})
 
-
-.controller('SearchCtrl', function($scope, $kinvey) {
+.controller('SearchCtrl', function($scope, $kinvey, $sce) {
 
     $scope.$on('$ionicView.beforeEnter', function() {
         console.log('load search view');
-        var user = Kinvey.getActiveUser();
-        var query = new Kinvey.Query();
-        query.equalTo('userOwner', user.email);
-        console.log(user.email);
-        $kinvey.DataStore.find('companies', query).then(function(companies) {
-            console.log(companies);
-            $scope.companies = companies;
+
+        $kinvey.DataStore.find('Products').then(function(products) {
+            console.log(products);
+            $scope.products = products;
         });
     });
 
@@ -40,53 +26,57 @@ angular.module('starter.controllers', ['kinvey'])
     $scope.searchme = function() {
         console.log('inside searchctrl');
 
-        console.log(document.getElementById("chosenCompany").value);
+        console.log(document.getElementById("chosenProduct").value);
 
         var query = new Kinvey.Query();
-        query.equalTo('companyname', document.getElementById("chosenCompany").value);
-        $kinvey.DataStore.find('companies', query).then(function(accountlist) {
-            console.log(accountlist);
-            $scope.accountlist = accountlist;
+        query.equalTo('title', document.getElementById("chosenProduct").value);
+        $kinvey.DataStore.find('Products', query).then(function(thisproduct) {
+            console.log(thisproduct);
+            $scope.thisproduct = thisproduct;
         });
     };
 })
 
-.controller('InsertContactCtrl', function($scope, $kinvey, $ionicLoading) {
+.controller('InsertTicketCtrl', function($scope, $kinvey, $ionicLoading) {
     $scope.insertme = function() {
-        var mycname = document.getElementById("custname").value;
-        document.getElementById("custname").value = "";
-        console.log(mycname);
+        var mytask = document.getElementById("task").value;
+        document.getElementById("task").value = "";
+        console.log(mytask);
 
-        var mycompanyname = document.getElementById("companyname").value;
-        console.log(mycompanyname);
-        document.getElementById("companyname").value = "";
+        var myduedate = document.getElementById("duedate").value;
+        console.log(duedate);
+        document.getElementById("duedate").value = "";
 
-        var mycell = document.getElementById("cell").value;
-        document.getElementById("cell").value = "";
-        var myemail = document.getElementById("email").value;
-        document.getElementById("email").value = "";
-        var myaddr1 = document.getElementById("addr1").value;
-        document.getElementById("addr1").value = "";
-        var myzip = document.getElementById("zip").value;
-        document.getElementById("zip").value = "";
+
+
+        var mycomplete = document.getElementById("completed").checked;
+        console.log(mycomplete);
+        //document.getElementById("testdrive").value = false;
+
+        var complete = false;
+        if (mycomplete == true) {
+            complete = true;
+        } else {
+            complete = false;
+        }
+
 
         var data = {};
 
-        data.contactname = mycname;
-        data.companyname = mycompanyname;
-        data.cell = mycell;
-        data.email = myemail;
-        data.addr1 = myaddr1;
+        data.action = mytask;
+        data.duedate = myduedate;
+        data.completed = complete;
+        data.class = "personal";
+        data.Title = "Personal Task";
+        console.log(JSON.stringify(data));
 
-        data.zip = myzip;
-        console.log(mycname + ' ' + mycompanyname);
 
-        $kinvey.DataStore.save('contacts', data).then(function(data) {
+        $kinvey.DataStore.save('todo', data).then(function(data) {
             console.log(data);
         });
 
         $ionicLoading.show({
-            template: 'contact inserted',
+            template: 'task inserted',
             noBackdrop: true,
             duration: 2000
         });
@@ -96,126 +86,103 @@ angular.module('starter.controllers', ['kinvey'])
 
 
 
-.controller('CompeteCtrl', function($scope, $kinvey, $ionicLoading) {
-    $scope.compareme = function() {
-        console.log('inside compareme');
-        var mychkAuto = document.getElementById("chkAuto").checked;
-        console.log(mychkAuto);
-
-        var mychkHome = document.getElementById("chkHome").checked;
-        console.log(mychkHome);
 
 
-        var mychkLife = document.getElementById("chkLife").checked;
-        console.log(mychkLife);
-
-        var data = {};
-
-        data.auto = mychkAuto;
-        data.home = mychkHome;
-        data.life = mychkLife;
-        data.name = "Mattie";
-
-
-        $kinvey.DataStore.save('competition', data).then(function(data) {
-
-            console.log(data);
-            $scope.acme = data.acme;
-            $scope.amfam = data.amfam;
-            $scope.progressive = data.progressive;
-            $scope.statefarm = data.statefarm;
-        });
-
-        $ionicLoading.show({
-            template: 'computing price comparison',
-            noBackdrop: true,
-            duration: 2000
-        });
-
-    };
-})
-
-
-.controller('SendEmailCtrl', function($scope, $kinvey, $ionicLoading) {
-    $scope.sendme = function() {
-        var myemail = document.getElementById("sendtoemail").value;
-        document.getElementById("sendtoemail").value = "";
-        var sendtoname = document.getElementById("myrecipientname").value;
-        document.getElementById("myrecipientname").value = "";
-        console.log(myemail);
-
-        var data = {};
-
-        data.to = myemail;
-        data.subject = "Time to Schedule an Insurance Coverage Review";
-        data.body = "Dear Policyholder:\n\n\nWe notice that you are past due for a coverage review.  Did you know that over half of all coverage reviews end up saving the customer money?  Contact your agent today for a comprehensive look at your coverage.>";
-        data.html_body = "<html>Dear " + sendtoname + ":<br><br>We notice that you are past due for a coverage review.  Did you know that over half of all coverage reviews end up saving the customer money?  Contact your agent today for a comprehensive look at your coverage.<br><img src='http://www.lexpage.com/images/inscard2.jpg'></html>";
-        data.reply_to = "coveragereviw@acmeinsurance.com";
-
-        console.log(myemail);
-        //Kinvey.DataStore.save('books', data);
-        $kinvey.DataStore.save('email', data).then(function(data) {
-            console.log(data);
-        });
-
-        $ionicLoading.show({
-            template: 'email sent',
-            noBackdrop: true,
-            duration: 2000
-        });
-    };
-})
-
-
-
-.controller('CompanyCtrl', function($scope, $kinvey) {
+.controller('ProductCtrl', function($scope, $kinvey) {
 
     $scope.$on('$ionicView.beforeEnter', function() {
-        console.log('load view');
 
-        console.log('inside companyctrl');
-        var user = Kinvey.getActiveUser();
-        var query = new Kinvey.Query();
-        query.equalTo('userOwner', user.email);
-        console.log(user.email);
-        $kinvey.DataStore.find('companies', query).then(function(companies) {
-            console.log(companies);
-            $scope.companies = companies;
+        console.log('inside productctrl');
+
+        $kinvey.DataStore.find('Products').then(function(products) {
+            console.log(products);
+            $scope.products = products;
         });
     });
 })
 
 
+
+.controller('ProjectsCtrl', function($scope, $kinvey) {
+
+    $scope.doRefresh = function() {
+        console.log('todorefresh');
+        //var query = new Kinvey.Query();
+        //query.equalTo('Category', 'Zeeco');
+        $kinvey.DataStore.find('todo').then(function(tasks) {
+            console.log(tasks);
+            $scope.tasks = tasks;
+        });
+    }
+
+    $scope.$on('$ionicView.beforeEnter', function() {
+        console.log('todo load view');
+        //var query = new Kinvey.Query();
+        //query.equalTo('Category', 'Zeeco');
+        $kinvey.DataStore.find('todo').then(function(tasks) {
+            console.log(tasks);
+            $scope.tasks = tasks;
+        });
+    });
+
+})
+
+.controller('RefCtrl', function($scope, $kinvey) {
+    // With the new view caching in Ionic, Controllers are only called
+    // when they are recreated or on app start, instead of every page change.
+    // To listen for when this page is active (for example, to refresh data),
+    // listen for the $ionicView.enter event:
+    //
+
+    $scope.$on('$ionicView.beforeEnter', function() {
+        console.log('ref load view');
+        var query = new $kinvey.Query();
+        query.greaterThan('size', 0);
+        var promise = $kinvey.File.find(query);
+        promise.then(function(files) {
+            console.log(files);
+            $scope.files = files;
+        }, function(err) {
+            console.log(err);
+        });
+    });
+})
 
 .controller('PartnerCtrl', function($scope, $kinvey) {
 
-   $scope.doRefresh = function() {
-     console.log('refresh');
-     $kinvey.DataStore.find('partner').then(function(partners) {
-            console.log(partners);
-            $scope.partners = partners;
+    $scope.doRefresh = function() {
+        console.log('refresh');
+        //var query = new Kinvey.Query();
+        //query.equalTo('Category', 'Zeeco');
+        $kinvey.DataStore.find('Account').then(function(accounts) {
+            console.log(accounts);
+            $scope.accounts = accounts;
         });
-      }
+    }
 
     $scope.$on('$ionicView.beforeEnter', function() {
-        console.log('partner load view');
-        $kinvey.DataStore.find('partner').then(function(partners) {
-            console.log(partners);
-            $scope.partners = partners;
+        console.log('account load view');
+        //var query = new Kinvey.Query();
+        //query.equalTo('Category', 'Zeeco');
+        $kinvey.DataStore.find('Account').then(function(accounts) {
+            console.log(accounts);
+            $scope.accounts = accounts;
         });
     });
-    
+
 })
+
+
 
 .controller('BrandCtrl', function($scope, $kinvey) {
 
-   $scope.doRefreshBrand = function() {
-     console.log('refresh brand');
-     $kinvey.DataStore.find('brand').then(function(mybrand) {
+    $scope.doRefreshBrand = function() {
+        console.log('refresh brand');
+        $kinvey.DataStore.find('brand').then(function(mybrand) {
             console.log(mybrand);
             $scope.mybrand = mybrand;
         });
-      }
+    }
 
     $scope.$on('$ionicView.beforeEnter', function() {
         console.log('partner load view');
@@ -224,9 +191,8 @@ angular.module('starter.controllers', ['kinvey'])
             $scope.mybrand = brand;
         });
     });
-    
-})
 
+})
 
 
 .controller('MenuCtrl', function($scope, $kinvey, $ionicSideMenuDelegate, $ionicModal) {
@@ -245,101 +211,40 @@ angular.module('starter.controllers', ['kinvey'])
 
 
 
-
-.controller('RiskCtrl', function($scope) {
-
-    $scope.showRisk = true;
-
-    $scope.computeRisk = function() {
-        console.log('yo, risk here');
-
-        var myage = document.getElementById("yourage").value;
-        var mygender = document.getElementById("yourgender").value;
-        var myweight = document.getElementById("yourweight").value;
-        var myexercise = document.getElementById("yourexercise").value;
-        var mysmoker = document.getElementById("yoursmoker").checked;
-        console.log("They smoke: " + mysmoker);
-
-        var healthdata = {};
-        healthdata.name = 'MattieD';
-        healthdata.myage = myage;
-        healthdata.myweight = myweight;
-        healthdata.mysmoker = mysmoker;
-        healthdata.mygender = mygender;
-        healthdata.myexercise = myexercise;
-
-
-
-        var promise = Kinvey.execute('healthcalc', healthdata, {
-            success: function(response) {
-                console.log('riskFactor = ' + response.riskfactor);
-                console.log('advice = ' + response.advice);
-                document.getElementById("myrisk").value = response.riskfactor;
-                $scope.riskrating = response.riskfactor;
-                $scope.myadvice = response.advice;
-            }
-        });
-        $scope.showRisk = false;
-        console.log('risk = ' + $scope.showRisk);
-
-    }
-
-    console.log('risk');
-})
-
-
-.controller('WeatherCtrl', function($scope, $ionicSlideBoxDelegate) {
-
-    $scope.myActiveSlide = 0;
-
-    $scope.directorClick = function() {
-        $scope.myActiveSlide = 1;
-        $ionicSlideBoxDelegate.slide(1);
-        console.log('director');
-        console.log($scope.myActiveSlide)
-    };
-
-    $scope.accidentClick = function() {
-        $scope.myActiveSlide = 2;
-        $ionicSlideBoxDelegate.slide(2);
-        console.log('accident');
-    };
-
-    $scope.homeClick = function() {
-        $scope.myActiveSlide = 0;
-        $ionicSlideBoxDelegate.slide(0);
-        console.log('home');
-    };
-
-    $scope.keyClick = function() {
-        $scope.myActiveSlide = 3;
-        $ionicSlideBoxDelegate.slide(3);
-        console.log('key');
-    };
-
-    console.log('tornado');
-})
-
-.controller('HomeCtrl', function($scope, $kinvey) {
+.controller('HomeCtrl', function($scope, $kinvey, $ionicSideMenuDelegate, $rootScope) {
     console.log('home');
 
-    $scope.$on('$ionicView.enter', function() {
-        console.log('before entering home');
+    $scope.$on('$ionicView.beforeEnter', function() {
+        // we're authenticated, grab logo and color scheme
+        console.log('home');
+        var query = new Kinvey.Query();
+        query.equalTo('ActiveBrand', true);
+        $kinvey.DataStore.find('DemoBrandingData', query).then(function(brand) {
+            console.log(brand);
+            $rootScope.primarycolor = brand[0].PrimaryColor;
 
-        //var query = new Kinvey.Query();
-        //query.equalTo('_id', '5539149bbbc83fd84a015bb5');
-
-        $kinvey.DataStore.find('brand').then(function(brand) {
-            console.log(brand[0].headerlabel);
-            $scope.headerlabel = brand[0].headerlabel;
+            if (brand[0].LogoFileName.indexOf('http') == -1) {
+                console.log('local path');
+                brand[0].LogoFileName = "img/" + brand[0].LogoFileName;
+            }
+            $rootScope.logo = brand[0].LogoFileName;
+            $rootScope.screenText = brand[0].HomeScreenText;
+            $rootScope.textColor = brand[0].PrimaryTextColor;
+            $rootScope.customer = brand[0].CustomerName;
+            $rootScope.accountsname = brand[0].AccountsName;
+            $rootScope.tasksname = brand[0].TasksName;
+            $rootScope.addtaskname = brand[0].AddTaskName;
+            $rootScope.calcname = brand[0].CalculatorName;
+            $rootScope.productsname = brand[0].ProductsName;
         });
     });
 
+
 })
 
 
 
-.controller('AccountCtrl', function($scope, $state, $kinvey) {
+.controller('AccountCtrl', function($scope, $state, $kinvey, $cordovaPush, $http) {
     $scope.userData = {
         email: "",
         password: ""
@@ -347,7 +252,7 @@ angular.module('starter.controllers', ['kinvey'])
 
 
     $scope.validateUser = function() {
-        var promise = $kinvey.User.login({
+        /*var promise = $kinvey.User.login({
             username: $scope.userData.email,
             password: $scope.userData.password
         });
@@ -364,7 +269,46 @@ angular.module('starter.controllers', ['kinvey'])
                 console.log("Error login " + error.description); //
             }
         );
-    };
+    };*/
+        var promise = $kinvey.User.MIC.loginWithAuthorizationCodeLoginPage('http://localhost:8100');
+        promise.then(function(user) {
+            $scope.submittedError = false;
+
+            // you have a user, now register the token
+            //
+            console.log('we have an active user');
+
+            // only do this if a token hasn't been registered
+            if (Kinvey.getActiveUser()._messaging.pushTokens.length < 1) {
+                $cordovaPush.register({ "badge": true, "sound": true, "alert": true }).then(function(deviceToken) {
+                    console.log('registering for push');
+                    console.log(deviceToken);
+                    var registerURL = "https://baas.kinvey.com/push/" + 'kid_ZJk02vOUFg' + "/register-device";
+                    var body = {
+                        platform: "ios",
+                        deviceId: deviceToken
+                    };
+                    var options = {
+                        headers: {
+                            "Authorization": "Kinvey " + $kinvey.getActiveUser()._kmd.authtoken
+                        }
+                    };
+                    $http.post(registerURL, body, options)
+                        .success(function() { alert("Registered!"); })
+                        .error(function() { alert("Did not Register!: " + error.message); });
+                }, function(error) {
+                    console.log(error);
+                });
+            }
+            $state.go('menu.tabs.home');
+        }, function(err) {
+            $scope.submittedError = true;
+            $scope.errorDescription = err.description;
+            console.log(err);
+            console.log("Error login " + err.description);
+            $state.go('menu.tabs.account');
+        });
+    }
 
     $scope.signUp = function() {
         var promise = $kinvey.User.signup({
